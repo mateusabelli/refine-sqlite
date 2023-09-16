@@ -29,35 +29,32 @@ export const dataProvider = (
             const db = new sqlite3.Database(apiUrl);
             // const url = `${apiUrl}/${resource}`;
 
-            // const {
-            //     current = 1,
-            //     pageSize = 10,
-            //     mode = "server",
-            // } = pagination ?? {};
-            //
+            const {
+                current = 1,
+                pageSize = 10,
+                mode = "server",
+            } = pagination ?? {};
+
             // const { headers: headersFromMeta, method } = meta ?? {};
             // const requestMethod = (method as MethodTypes) ?? "get";
             //
-            // const queryFilters = generateFilter(filters);
-            //
-            // const query: {
-            //     _start?: number;
-            //     _end?: number;
-            //     _sort?: string;
-            //     _order?: string;
-            // } = {};
-            //
-            // if (mode === "server") {
-            //     query._start = (current - 1) * pageSize;
-            //     query._end = current * pageSize;
-            // }
-            //
-            // const generatedSort = generateSort(sorters);
-            // if (generatedSort) {
-            //     const { _sort, _order } = generatedSort;
-            //     query._sort = _sort.join(",");
-            //     query._order = _order.join(",");
-            // }
+            const queryFilters = generateFilter(filters);
+
+            const query: {
+                _start?: number;
+                _end?: number;
+                _sortString?: string;
+            } = {};
+
+            if (mode === "server") {
+                query._start = (current - 1) * pageSize;
+                query._end = current * pageSize;
+            }
+
+            const generatedSort = generateSort(sorters);
+            if (generatedSort) {
+                query._sortString = generatedSort;
+            }
 
             // const { data, headers } = await httpClient[requestMethod](
             //     `${url}?${stringify(query)}&${stringify(queryFilters)}`,
@@ -69,7 +66,13 @@ export const dataProvider = (
             // const total = +headers["x-total-count"];
 
             const rows = await new Promise((resolve, reject) => {
-                db.all(`SELECT * FROM ${resource}`, (err, rows) => {
+                let sql = `SELECT * FROM ${resource}`;
+
+                if (generatedSort) {
+                    sql += ` ORDER BY ${query._sortString}`;
+                }
+
+                db.all(sql, (err, rows) => {
                     if (err) {
                         reject(err)
                     } else {
