@@ -1,9 +1,5 @@
 lockfileVersion: '6.0'
 
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
-
 dependencies:
   axios:
     specifier: ^0.26.1
@@ -7396,3 +7392,7 @@ packages:
     dependencies:
       '@types/yoga-layout': 1.9.2
     dev: true
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
