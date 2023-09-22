@@ -18,15 +18,14 @@ const mapOperator = (operator: CrudOperators): string => {
     }
 };
 
-// TODO: implement this function properly
 export const generateFilter = (filters?: CrudFilters) => {
-    const queryFilters: { [key: string]: string } = {};
+    let queryFilterString = "";
 
     if (filters) {
         filters.map((filter) => {
             if (filter.operator === "or" || filter.operator === "and") {
                 throw new Error(
-                    `[@refinedev/simple-rest]: \`operator: ${filter.operator}\` is not supported. You can create custom data provider. https://refine.dev/docs/api-reference/core/providers/data-provider/#creating-a-data-provider`,
+                    `[refine-sqlite]: \`operator: ${filter.operator}\` is not supported. You can create custom data provider. https://refine.dev/docs/api-reference/core/providers/data-provider/#creating-a-data-provider`,
                 );
             }
 
@@ -34,16 +33,11 @@ export const generateFilter = (filters?: CrudFilters) => {
             if ("field" in filter) {
                 const { field, operator, value } = filter;
 
-                if (field === "q") {
-                    queryFilters[field] = value;
-                    return;
-                }
-
-                const mappedOperator = mapOperator(operator);
-                queryFilters[`${field}${mappedOperator}`] = value;
+                queryFilterString += `${field} ${mapOperator(operator)} ${value} AND `;
             }
         });
     }
 
-    return queryFilters;
+    // Returns the query string without the last 5 characters (AND + space)
+    return queryFilterString.slice(0, -5)
 };

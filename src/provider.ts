@@ -68,6 +68,10 @@ export const dataProvider = (
             const rows = await new Promise((resolve, reject) => {
                 let sql = `SELECT * FROM ${resource}`;
 
+                if (queryFilters) {
+                    sql += ` WHERE ${queryFilters}`;
+                }
+
                 if (generatedSort) {
                     sql += ` ORDER BY ${query._sortString}`;
                 }
