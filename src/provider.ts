@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
 import { stringify } from "query-string";
-import { DataProvider, GetOneResponse } from "@refinedev/core";
+import { DataProvider } from "@refinedev/core";
 import { axiosInstance, generateSort, generateFilter } from "./utils";
 import sqlite3 from "sqlite3";
 
@@ -15,13 +15,7 @@ export const dataProvider = (
     "createMany" |
     "updateMany" |
     "deleteMany" |
-    "custom" |
-    "getApiUrl" |
-    "deleteOne" |
-    "create" |
-    "update" |
-    "getMany"
-
+    "custom"
 > => ({
     getList: async ({ resource, pagination, filters, sorters, meta }) => {
         try {
@@ -82,8 +76,7 @@ export const dataProvider = (
                         resolve(rows);
                     }
                     db.close();
-                }
-                );
+                });
             }) as Array<any>
 
             let data = rows;
@@ -102,54 +95,137 @@ export const dataProvider = (
         }
     },
 
-    // getMany: async ({ resource, ids, meta }) => {
-    //     const { headers, method } = meta ?? {};
-    //     const requestMethod = (method as MethodTypes) ?? "get";
-    //
-    //     const { data } = await httpClient[requestMethod](
-    //         `${apiUrl}/${resource}?${stringify({ id: ids })}`,
-    //         { headers },
-    //     );
-    //
-    //     return {
-    //         data,
-    //     };
-    // },
+    // TODO: Test this function
+    getMany: async ({ resource, ids, meta }) => {
+        try {
+            const db = new sqlite3.Database(apiUrl);
 
-    // create: async ({ resource, variables, meta }) => {
-    //     const url = `${apiUrl}/${resource}`;
-    //
-    //     const { headers, method } = meta ?? {};
-    //     const requestMethod = (method as MethodTypesWithBody) ?? "post";
-    //
-    //     const { data } = await httpClient[requestMethod](url, variables, {
-    //         headers,
-    //     });
-    //
-    //     return {
-    //         data,
-    //     };
-    // },
+            const data = await new Promise((resolve, reject) => {
+                let idString = ids.join(", ")
 
-    // update: async ({ resource, id, variables, meta }) => {
-    //     const url = `${apiUrl}/${resource}/${id}`;
-    //
-    //     const { headers, method } = meta ?? {};
-    //     const requestMethod = (method as MethodTypesWithBody) ?? "patch";
-    //
-    //     const { data } = await httpClient[requestMethod](url, variables, {
-    //         headers,
-    //     });
-    //
-    //     return {
-    //         data,
-    //     };
-    // },
+                const sql = `SELECT * FROM ${resource} WHERE id IN (${idString})`;
+
+                db.all(sql, (err, rows) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(rows);
+                    }
+                    db.close();
+                });
+            }) as Array<any>
+
+            // const { headers, method } = meta ?? {};
+            // const requestMethod = (method as MethodTypes) ?? "get";
+            //
+            // const { data } = await httpClient[requestMethod](
+            //     `${apiUrl}/${resource}?${stringify({ id: ids })}`,
+            //     { headers },
+            // );
+
+            return {
+                data,
+            };
+
+        } catch (error) {
+            console.error("Error in getMany()", error);
+            return {
+                data: [],
+            }
+        }
+    },
+
+    // TODO: Test this function
+    create: async ({ resource, variables, meta }) => {
+        try {
+            const db = new sqlite3.Database(apiUrl);
+
+            const data = await new Promise((resolve, reject) => {
+                const columns = Object.keys(variables || {}).join(", ")
+                const values = Object.values(variables || {}).join(", ")
+
+                const sql = `INSERT INTO ${resource} (${columns}) VALUES (${values})`
+
+                db.get(sql, (err, row) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(row);
+                    }
+                    db.close();
+                });
+            }) as any;
+
+            // const { headers, method } = meta ?? {};
+            // const requestMethod = (method as MethodTypesWithBody) ?? "post";
+            //
+            // const { data } = await httpClient[requestMethod](url, variables, {
+            //     headers,
+            // });
+
+            return {
+                data,
+            };
+        } catch (error) {
+            console.error("Error in create()", error);
+            return {
+                data: null
+            }
+        }
+    },
+
+    // TODO: Test this function
+    update: async ({ resource, id, variables, meta }) => {
+        try {
+            const db = new sqlite3.Database(apiUrl);
+
+            const data = await new Promise((resolve, reject) => {
+                const columns = Object.keys(variables || {})
+                const values = Object.values(variables || {});
+
+                let updateQuery = "";
+
+                columns.forEach((column, index) => {
+                    updateQuery += `${column} = ${values[index]}, `;
+                });
+
+                // Slices the last comma
+                updateQuery.slice(0, -1);
+
+                const sql = `UPDATE ${resource} SET ${updateQuery} WHERE id = ${id}`;
+
+                db.get(sql, (err, row) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(row);
+                    }
+                    db.close();
+                });
+            }) as any;
+
+            // const { headers, method } = meta ?? {};
+            // const requestMethod = (method as MethodTypesWithBody) ?? "patch";
+            //
+            // const { data } = await httpClient[requestMethod](url, variables, {
+            //     headers,
+            // });
+
+            return {
+                data
+            }
+        } catch (error) {
+            console.error("Error in update()", error);
+            return {
+                data: null
+            }
+        }
+    },
 
     getOne: async ({ resource, id, meta }) => {
         try {
             const db = new sqlite3.Database(apiUrl);
-            
+
             const data = await new Promise((resolve, reject) => {
                 const sql = `SELECT * FROM ${resource} WHERE id = ${id}`;
 
@@ -167,7 +243,7 @@ export const dataProvider = (
             // const requestMethod = (method as MethodTypes) ?? "get";
 
             // const { data } = await httpClient[requestMethod](url, { headers });
-        
+
             return {
                 data,
             };
@@ -178,26 +254,49 @@ export const dataProvider = (
             }
         }
     },
-    //
-    // deleteOne: async ({ resource, id, variables, meta }) => {
-    //     const url = `${apiUrl}/${resource}/${id}`;
-    //
-    //     const { headers, method } = meta ?? {};
-    //     const requestMethod = (method as MethodTypesWithBody) ?? "delete";
-    //
-    //     const { data } = await httpClient[requestMethod](url, {
-    //         data: variables,
-    //         headers,
-    //     });
-    //
-    //     return {
-    //         data,
-    //     };
-    // },
 
-    // getApiUrl: () => {
-    //     return apiUrl;
-    // },
+    // TODO: Test this function
+    deleteOne: async ({resource, id, variables, meta}) => {
+        try {
+            const db = new sqlite3.Database(apiUrl);
+
+            const data = await new Promise((resolve, reject) => {
+                const sql = `DELETE FROM ${resource} WHERE id = ${id}`;
+
+                db.get(sql, (err, row) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(row);
+                    }
+                    db.close();
+                });
+            }) as any
+
+            // const { headers, method } = meta ?? {};
+            // const requestMethod = (method as MethodTypesWithBody) ?? "delete";
+            //
+            // const { data } = await httpClient[requestMethod](url, {
+            //     data: variables,
+            //     headers,
+            // });
+
+            return {
+                data,
+            };
+
+        } catch (error) {
+            console.error("Error in deleteOne()", error);
+            return {
+                data: null
+            }
+        }
+    },
+
+
+    getApiUrl: () => {
+        return apiUrl;
+    },
 
     // custom: async ({
     //     url,
