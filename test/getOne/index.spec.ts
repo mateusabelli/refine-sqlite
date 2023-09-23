@@ -1,22 +1,15 @@
-import axios from "axios";
-
-import JsonServer from "../../src/index";
-import "./index.mock";
-
-axios.defaults.adapter = require("axios/lib/adapters/http");
+import dataProvider from "../../src/index";
 
 describe("getOne", () => {
+    const apiUrl = "./test.db";
+
     it("correct response", async () => {
-        const response = await JsonServer(
-            "https://api.fake-rest.refine.dev",
-            axios,
-        ).getOne({ resource: "posts", id: "1" });
+        const response = await dataProvider(apiUrl)
+            .getOne({ resource: "posts", id: "2" });
 
         const { data } = response;
 
-        expect(data.id).toBe(1);
-        expect(data.title).toBe(
-            "Deleniti et quasi architecto hic quam et tempora vero quo.",
-        );
+        expect(data.id).toBe(2);
+        expect(data.title).toBe("Quia ducimus voluptate.");
     });
 });

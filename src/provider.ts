@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
 import { stringify } from "query-string";
-import { DataProvider } from "@refinedev/core";
+import { DataProvider, GetOneResponse } from "@refinedev/core";
 import { axiosInstance, generateSort, generateFilter } from "./utils";
 import sqlite3 from "sqlite3";
 
@@ -18,7 +18,6 @@ export const dataProvider = (
     "custom" |
     "getApiUrl" |
     "deleteOne" |
-    "getOne" |
     "create" |
     "update" |
     "getMany"
@@ -94,8 +93,8 @@ export const dataProvider = (
                 data,
                 total: total || data.length,
             };
-        } catch (err) {
-            console.error("Error in getList()", err);
+        } catch (error) {
+            console.error("Error in getList()", error);
             return {
                 data: [],
                 total: 0,
@@ -147,18 +146,38 @@ export const dataProvider = (
     //     };
     // },
 
-    // getOne: async ({ resource, id, meta }) => {
-    //     const url = `${apiUrl}/${resource}/${id}`;
-    //
-    //     const { headers, method } = meta ?? {};
-    //     const requestMethod = (method as MethodTypes) ?? "get";
-    //
-    //     const { data } = await httpClient[requestMethod](url, { headers });
-    //
-    //     return {
-    //         data,
-    //     };
-    // },
+    getOne: async ({ resource, id, meta }) => {
+        try {
+            const db = new sqlite3.Database(apiUrl);
+            
+            const data = await new Promise((resolve, reject) => {
+                const sql = `SELECT * FROM ${resource} WHERE id = ${id}`;
+
+                db.get(sql, (err, row) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(row);
+                    }
+                    db.close();
+                });
+            }) as any
+
+            // const { headers, method } = meta ?? {};
+            // const requestMethod = (method as MethodTypes) ?? "get";
+
+            // const { data } = await httpClient[requestMethod](url, { headers });
+        
+            return {
+                data,
+            };
+        } catch (error) {
+            console.error("Error in getOne()", error);
+            return {
+                data: null
+            }
+        }
+    },
     //
     // deleteOne: async ({ resource, id, variables, meta }) => {
     //     const url = `${apiUrl}/${resource}/${id}`;
