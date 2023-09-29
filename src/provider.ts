@@ -174,8 +174,8 @@ export const dataProvider = (
         }
     },
 
-    // TODO: Test this function
     update: async ({ resource, id, variables, meta }) => {
+        let updateQuery = "";
         try {
             const db = new sqlite3.Database(apiUrl);
 
@@ -183,23 +183,29 @@ export const dataProvider = (
                 const columns = Object.keys(variables || {})
                 const values = Object.values(variables || {});
 
-                let updateQuery = "";
-
                 columns.forEach((column, index) => {
-                    updateQuery += `${column} = ${values[index]}, `;
+                    updateQuery += `${column} = '${values[index]}', `;
                 });
 
                 // Slices the last comma
-                updateQuery.slice(0, -1);
+                updateQuery = updateQuery.slice(0, -2);
 
-                const sql = `UPDATE ${resource} SET ${updateQuery} WHERE id = ${id}`;
+                let sql = `UPDATE ${resource} SET ${updateQuery} WHERE id = ${id}`;
 
-                db.get(sql, (err, row) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(row);
-                    }
+                db.serialize(() => {
+                    db.run(sql, (err) => {
+                        if (err) {
+                            reject(err)
+                        }
+                    });
+                    sql = `SELECT * FROM ${resource} WHERE id = ${id}`;
+                    db.get(sql, (err, row) => {
+                        if (err) {
+                            reject(err)
+                        } else {
+                            resolve(row);
+                        }
+                    });
                     db.close();
                 });
             }) as any;

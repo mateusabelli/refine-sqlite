@@ -1,6 +1,5 @@
 import dataProvider from "../../src/index";
 
-// TODO: Fix this test
 describe("update", () => {
     const apiUrl = "./test.db"
 
