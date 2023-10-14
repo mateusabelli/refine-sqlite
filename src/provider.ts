@@ -1,15 +1,12 @@
-import { AxiosInstance } from "axios";
-import { stringify } from "query-string";
 import { DataProvider } from "@refinedev/core";
-import { axiosInstance, generateSort, generateFilter } from "./utils";
+import { generateSort, generateFilter } from "./utils";
 import sqlite3 from "sqlite3";
 
 type MethodTypes = "get" | "delete" | "head" | "options";
 type MethodTypesWithBody = "post" | "put" | "patch";
 
 export const dataProvider = (
-    apiUrl: string,
-    // httpClient: AxiosInstance = axiosInstance,
+    apiUrl: string
 ): Omit<
     Required<DataProvider>,
     "createMany" |
@@ -95,7 +92,6 @@ export const dataProvider = (
         }
     },
 
-    // TODO: Test this function
     getMany: async ({ resource, ids, meta }) => {
         try {
             const db = new sqlite3.Database(apiUrl);
@@ -135,23 +131,31 @@ export const dataProvider = (
         }
     },
 
-    // TODO: Test this function
     create: async ({ resource, variables, meta }) => {
         try {
             const db = new sqlite3.Database(apiUrl);
 
             const data = await new Promise((resolve, reject) => {
                 const columns = Object.keys(variables || {}).join(", ")
-                const values = Object.values(variables || {}).join(", ")
+                const values = Object.values(variables || {}).map((value) => `'${value}'`).join(", ")
 
-                const sql = `INSERT INTO ${resource} (${columns}) VALUES (${values})`
+                let sql = `INSERT INTO ${resource} (${columns}) VALUES (${values})`
+                // Sample output of sql: INSERT INTO posts (id, title) VALUES ('1001', 'foo')
 
-                db.get(sql, (err, row) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(row);
-                    }
+                db.serialize(() => {
+                    db.run(sql, (err) => {
+                        if (err) {
+                            reject(err)
+                        }
+                    });
+                    sql = `SELECT * FROM ${resource} WHERE (${columns}) = (${values})`;
+                    db.get(sql, (err, row) => {
+                        if (err) {
+                            reject(err)
+                        } else {
+                            resolve(row);
+                        }
+                    });
                     db.close();
                 });
             }) as any;
@@ -218,7 +222,7 @@ export const dataProvider = (
             // });
 
             return {
-                data
+                data,
             }
         } catch (error) {
             console.error("Error in update()", error);
@@ -261,20 +265,27 @@ export const dataProvider = (
         }
     },
 
-    // TODO: Test this function
     deleteOne: async ({resource, id, variables, meta}) => {
         try {
             const db = new sqlite3.Database(apiUrl);
 
             const data = await new Promise((resolve, reject) => {
-                const sql = `DELETE FROM ${resource} WHERE id = ${id}`;
+                let sql = `DELETE FROM ${resource} WHERE id = ${id}`;
 
-                db.get(sql, (err, row) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(row);
-                    }
+                db.serialize(() => {
+                    db.run(sql, (err) => {
+                        if (err) {
+                            reject(err)
+                        }
+                    });
+                    sql = `SELECT * FROM ${resource} WHERE id = ${id}`;
+                    db.get(sql, (err, row) => {
+                        if (err) {
+                            reject(err)
+                        } else {
+                            resolve(row);
+                        }
+                    });
                     db.close();
                 });
             }) as any
@@ -287,81 +298,23 @@ export const dataProvider = (
             //     headers,
             // });
 
-            return {
-                data,
-            };
+            if (data) {
+                throw new Error("The row was not deleted");
+            }
 
+            return {
+                data: data ?? null,
+            }
         } catch (error) {
             console.error("Error in deleteOne()", error);
             return {
-                data: null
+                data: undefined
             }
         }
-    },
 
+    },
 
     getApiUrl: () => {
         return apiUrl;
-    },
-
-    // custom: async ({
-    //     url,
-    //     method,
-    //     filters,
-    //     sorters,
-    //     payload,
-    //     query,
-    //     headers,
-    // }) => {
-    //     let requestUrl = `${url}?`;
-    //
-    //     if (sorters) {
-    //         const generatedSort = generateSort(sorters);
-    //         if (generatedSort) {
-    //             const { _sort, _order } = generatedSort;
-    //             const sortQuery = {
-    //                 _sort: _sort.join(","),
-    //                 _order: _order.join(","),
-    //             };
-    //             requestUrl = `${requestUrl}&${stringify(sortQuery)}`;
-    //         }
-    //     }
-    //
-    //     if (filters) {
-    //         const filterQuery = generateFilter(filters);
-    //         requestUrl = `${requestUrl}&${stringify(filterQuery)}`;
-    //     }
-    //
-    //     if (query) {
-    //         requestUrl = `${requestUrl}&${stringify(query)}`;
-    //     }
-    //
-    //     if (headers) {
-    //         httpClient.defaults.headers = {
-    //             ...httpClient.defaults.headers,
-    //             ...headers,
-    //         };
-    //     }
-    //
-    //     let axiosResponse;
-    //     switch (method) {
-    //         case "put":
-    //         case "post":
-    //         case "patch":
-    //             axiosResponse = await httpClient[method](url, payload);
-    //             break;
-    //         case "delete":
-    //             axiosResponse = await httpClient.delete(url, {
-    //                 data: payload,
-    //             });
-    //             break;
-    //         default:
-    //             axiosResponse = await httpClient.get(requestUrl);
-    //             break;
-    //     }
-    //
-    //     const { data } = axiosResponse;
-    //
-    //     return Promise.resolve({ data });
-    // },
+    }
 });

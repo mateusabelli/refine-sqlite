@@ -1,19 +1,14 @@
-import axios from "axios";
-
-import JsonServer from "../../src/index";
-import "./index.mock";
-
-axios.defaults.adapter = require("axios/lib/adapters/http");
+import dataProvider from "../../src";
 
 describe("deleteOne", () => {
+    const apiUrl = "./test.db"
+
     it("correct response", async () => {
-        const response = await JsonServer(
-            "https://api.fake-rest.refine.dev",
-            axios,
-        ).deleteOne({ resource: "posts", id: "1" });
+        const response = await dataProvider(apiUrl)
+            .deleteOne({ resource: "posts", id: "1" });
 
         const { data } = response;
 
-        expect(data).toEqual({});
+        expect(data).toEqual(null);
     });
 });

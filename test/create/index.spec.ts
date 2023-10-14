@@ -1,24 +1,20 @@
-import axios from "axios";
-
-import JsonServer from "../../src/index";
-import "./index.mock";
-
-axios.defaults.adapter = require("axios/lib/adapters/http");
+import dataProvider from "../../src";
 
 describe("create", () => {
+    const apiUrl = "./test.db"
+
     it("correct response", async () => {
-        const response = await JsonServer(
-            "https://api.fake-rest.refine.dev",
-            axios,
+        const response = await dataProvider(
+            apiUrl
         ).create({
             resource: "posts",
-            variables: { id: 1001, title: "foo", content: "bar" },
+            variables: { id: 1001, title: "foo", category_id: 1 },
         });
 
         const { data } = response;
 
         expect(data["id"]).toBe(1001);
         expect(data["title"]).toBe("foo");
-        expect(data["content"]).toBe("bar");
+        expect(data["category_id"]).toBe(1);
     });
 });
