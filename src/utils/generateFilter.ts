@@ -1,22 +1,5 @@
 import {CrudFilters} from "@refinedev/core";
-import {CrudOperators} from "@refinedev/core";
-
-const mapOperator = (operator: CrudOperators): string => {
-    switch (operator) {
-        case "ne":
-            return "IS NOT";
-        case "gte":
-            return ">=";
-        case "lte":
-            return "<=";
-        case "contains":
-            return "LIKE"
-        case "eq":
-            return "IS"
-        default:
-            return "";
-    }
-};
+import {mapOperator} from "./mapOperator";
 
 export const generateFilter = (filters?: CrudFilters) => {
     let queryFilterString = "";
@@ -33,7 +16,7 @@ export const generateFilter = (filters?: CrudFilters) => {
             if ("field" in filter) {
                 const { field, operator, value } = filter;
 
-                queryFilterString += `${field} ${mapOperator(operator)} ${value} AND `;
+                queryFilterString += `${field} ${mapOperator(operator)} '${value}' AND `;
             }
         });
     }
