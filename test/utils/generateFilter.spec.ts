@@ -2,21 +2,18 @@ import { CrudFilters } from "@refinedev/core";
 import { generateFilter } from "../../src/utils/generateFilter";
 
 describe("generateFilter", () => {
-    it("returns an empty object when no filters are provided", () => {
+    it("returns an empty string when no filters are provided", () => {
         const result = generateFilter();
-        expect(result).toEqual({});
+        expect(result).toEqual("");
     });
 
     it("creates a filter object based on the provided filters", () => {
         const filters: CrudFilters = [
-            { field: "name", operator: "eq", value: "John" },
-            { field: "age", operator: "gte", value: 25 },
+            { field: "title", operator: "eq", value: "Quia ducimus voluptate." },
+            { field: "category_id", operator: "gte", value: 4 },
         ];
         const result = generateFilter(filters);
-        expect(result).toEqual({
-            name: "John",
-            age_gte: 25,
-        });
+        expect(result).toEqual("title IS 'Quia ducimus voluptate.' AND category_id >= '4'");
     });
 
     it.each(["or", "and"])(
@@ -28,16 +25,4 @@ describe("generateFilter", () => {
             expect(() => generateFilter(filters)).toThrow();
         },
     );
-
-    it("creates a filter object with the 'q' field", () => {
-        const filters: CrudFilters = [
-            { field: "q", operator: "eq", value: "searchValue" },
-            { field: "name", operator: "eq", value: "John" },
-        ];
-        const result = generateFilter(filters);
-        expect(result).toEqual({
-            q: "searchValue",
-            name: "John",
-        });
-    });
 });

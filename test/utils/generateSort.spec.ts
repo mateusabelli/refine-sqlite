@@ -26,9 +26,6 @@ describe("generateSort", () => {
 
         const result = generateSort(sorters);
 
-        expect(result).toEqual({
-            _sort: ["field1", "field2"],
-            _order: ["asc", "desc"],
-        });
+        expect(result).toEqual("field1 asc, field2 desc");
     });
 });

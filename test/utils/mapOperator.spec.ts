@@ -1,34 +1,49 @@
-import { CrudSorting } from "@refinedev/core";
-import { generateSort } from "../../src/utils";
+import { CrudOperators } from "@refinedev/core";
+import { mapOperator } from "../../src/utils";
 
-describe("generateSort", () => {
-    it("should return undefined when sorters are not provided", () => {
-        const result = generateSort();
-        expect(result).toBeUndefined();
+describe("mapOperator", () => {
+    it("should return correct mapping for given operator", () => {
+        const operatorMappings: Record<CrudOperators, string> = {
+            ne: "IS NOT",
+            gte: ">=",
+            lte: "<=",
+            contains: "LIKE",
+            eq: "IS",
+            and: "",
+            between: "",
+            containss: "",
+            endswith: "",
+            endswiths: "",
+            gt: "",
+            in: "",
+            lt: "",
+            ncontains: "",
+            ncontainss: "",
+            nendswith: "",
+            nendswiths: "",
+            nnull: "",
+            nin: "",
+            nbetween: "",
+            nstartswith: "",
+            nstartswiths: "",
+            null: "",
+            or: "",
+            startswith: "",
+            startswiths: "",
+        };
+
+        for (const operator in operatorMappings) {
+            const expectedResult = operatorMappings[operator as CrudOperators];
+            expect(mapOperator(operator as CrudOperators)).toEqual(
+                expectedResult,
+            );
+        }
     });
 
-    it("should return undefined when sorters are empty", () => {
-        const result = generateSort([]);
-        expect(result).toBeUndefined();
-    });
-
-    it("should generate correct _sort and _order arrays for given sorters", () => {
-        const sorters: CrudSorting = [
-            {
-                field: "field1",
-                order: "asc",
-            },
-            {
-                field: "field2",
-                order: "desc",
-            },
-        ];
-
-        const result = generateSort(sorters);
-
-        expect(result).toEqual({
-            _sort: ["field1", "field2"],
-            _order: ["asc", "desc"],
-        });
-    });
+    it.each(["unsupported", "", undefined, null])(
+        "should return empty string for %s operator ",
+        (operator) => {
+            expect(mapOperator(operator as CrudOperators)).toEqual("");
+        },
+    );
 });
