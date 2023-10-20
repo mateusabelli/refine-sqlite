@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         node-version: [14.x, 16.x, 18.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        pnpm-version: [5.x.x, 6.x.x, 7.29.3]
 
     steps:
     - uses: actions/checkout@v3
@@ -24,10 +24,10 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Setup pnpm
+    - name: Setup PNPM ${{ matrix.pnpm-version }}
       uses: pnpm/action-setup@v2.4.0
       with:
-        version: 8
+        version: ${{ matrix.pnpm-version }}
     - run: pnpm install --frozen-lockfile
     - run: pnpm build 
     - run: pnpm test
