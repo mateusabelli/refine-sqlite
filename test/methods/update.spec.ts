@@ -1,4 +1,4 @@
-import dataProvider from "../../src/index";
+import dataProvider from "../../src";
 
 describe("update", () => {
     const apiUrl = "./test.db"
