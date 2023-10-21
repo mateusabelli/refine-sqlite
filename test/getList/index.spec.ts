@@ -12,6 +12,21 @@ describe("getList", () => {
         expect(response.total).toBe(6);
     })
 
+    it("correct response with pagination", async () => {
+        const response = await dataProvider(apiUrl)
+            .getList({
+                resource: "posts",
+                pagination: {
+                    current: 3,
+                    pageSize: 2,
+                }
+            });
+
+        expect(response.data[0]["id"]).toBe(5);
+        expect(response.data[0]["title"]).toBe("Dolorem eum non quis officiis iusto.");
+        expect(response.total).toBe(2);
+    })
+
     it("correct sorting response", async () => {
         const response = await dataProvider(apiUrl)
             .getList({

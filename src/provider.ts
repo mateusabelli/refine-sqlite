@@ -17,17 +17,15 @@ export const dataProvider = (
     getList: async ({ resource, pagination, filters, sorters, meta }) => {
         try {
             const db = new sqlite3.Database(apiUrl);
-            // const url = `${apiUrl}/${resource}`;
 
             const {
                 current = 1,
                 pageSize = 10,
-                mode = "server",
             } = pagination ?? {};
 
             // const { headers: headersFromMeta, method } = meta ?? {};
             // const requestMethod = (method as MethodTypes) ?? "get";
-            //
+
             const queryFilters = generateFilter(filters);
 
             const query: {
@@ -36,10 +34,8 @@ export const dataProvider = (
                 _sortString?: string;
             } = {};
 
-            if (mode === "server") {
-                query._start = (current - 1) * pageSize;
-                query._end = current * pageSize;
-            }
+            query._start = (current - 1) * pageSize;
+            query._end = current * pageSize;
 
             const generatedSort = generateSort(sorters);
             if (generatedSort) {
@@ -64,6 +60,10 @@ export const dataProvider = (
 
                 if (generatedSort) {
                     sql += ` ORDER BY ${query._sortString}`;
+                }
+
+                if (pagination) {
+                    sql += ` LIMIT ${query._start}, ${query._end}`;
                 }
 
                 db.all(sql, (err, rows) => {
