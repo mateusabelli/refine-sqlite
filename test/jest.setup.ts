@@ -9,7 +9,11 @@ beforeAll(async () => {
             fs.rmSync(dbPath);
         }
         // Create the database
-        const db = new sqlite3.Database(dbPath);
+        const db = new sqlite3.Database(dbPath, (err) => {
+            if (err) {
+                console.error("Error creating the database.", err);
+            }
+        });
 
         // Read the sql file
         const sql = fs.readFileSync("./test.sql").toString();
@@ -17,23 +21,27 @@ beforeAll(async () => {
 
         // Create the tables
         await new Promise<void>((resolve, reject) => {
-            // TODO: Fix the SQLITE_MISUSE error when using db.serialize(). It doesn't work without db.serialize()
             db.serialize(() => {
-                sqlArray.forEach((query) => {
-                    // Append the semicolon to the query
-                    query += ";";
+                for (let i = 0; i < sqlArray.length - 1; i++) {
+                    if (sqlArray[i].trim() === "") continue;
 
-                    db.run(query, (err) => {
+                    db.run(sqlArray[i], (err) => {
                         if (err) {
-                            console.error("Error in database table creation: ", err);
+                            console.error("Error running queries: ", err);
                             reject(err);
                         }
                     });
-                });
+                }
             });
-            db.close();
+            db.close((err) => {
+                if (err) {
+                    console.error("Error closing the database: ", err);
+                    reject(err);
+                }
+                resolve();
+            });
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error in beforeAll: ", error);
     }
 })
