@@ -6,22 +6,37 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "author": "Mateus Abelli",
-  "keywords": [],
+  "keywords": [
+    "refine",
+    "data provider",
+    "sqlite"
+  ],
   "private": false,
   "files": [
     "dist",
     "src"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mateusabelli/refine-sqlite.git"
+  },
+  "funding": [{
+    "type": "github",
+    "url": "https://github.com/sponsors/mateusabelli"
+  }],
   "engines": {
     "node": ">=10"
   },
+  "module": "dist/esm/index.js",
   "scripts": {
     "start": "tsup --watch --format esm,cjs,iife --legacy-output",
     "build": "tsup --format esm,cjs,iife --minify --legacy-output",
     "test": "jest --passWithNoTests --runInBand",
     "prepare": "npm run build"
   },
-  "module": "dist/esm/index.js",
+  "dependencies": {
+    "sqlite3": "^5.1.6"
+  },
   "devDependencies": {
     "@esbuild-plugins/node-resolve": "^0.2.2",
     "@refinedev/cli": "^2.16.6",
@@ -35,12 +50,5 @@
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
     "warn-once": "^0.1.1"
-  },
-  "dependencies": {
-    "sqlite3": "^5.1.6"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mateusabelli/refine-sqlite.git"
   }
 }
