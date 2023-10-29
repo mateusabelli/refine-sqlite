@@ -9,7 +9,7 @@
     refine-sqlite
 </h1>
 
-<p align="center">A Data Provider for <a href="https://refine.dev">refine</a> using <a href="https://www.sqlite.org/index.html">SQLite.</a></p>
+<p align="center">Connector for backends created with <a href="https://www.sqlite.org/index.html">SQLite.</a></p>
 
 <div align="center">
 
@@ -24,15 +24,12 @@
 
 ## Getting Started
 
-With **refine-sqlite** you can quickly start developing your next [refine](https://refine.dev/app) project with a lightweight local database.
-
-Start creating your app as fast as possible without the need to set up a complex database server or API.
+With **refine-sqlite** you can quickly start creating your app as fast as possible by leveraging the easy-to-use methods powered by [refine](https://refine.dev) to interact with your SQLite database.
 
 ## Features
 
-- **Easy to use** - Just import the data provider and use it in your app.
-- **Lightweight** - The SQLite database is lightweight and can be used in your app locally.
-- **Fast** - Start developing your app without the need to set up a full database server or API.
+- **Easy to use** - Just import the data provider and use it in your code.
+- **Lightweight** - The SQLite database is lightweight and can be used locally.
 - **Simple** - You won't need to type SQL queries, just use the data provider methods. Except for the tables creation, which you can easily do with the [DB Browser for SQLite](https://sqlitebrowser.org/).
 
 ## Installation
@@ -43,70 +40,203 @@ npm install refine-sqlite
 
 ## Usage
 
-Import the data provider in `App.tsx` (Or wherever you initialize your `<Refine />` component). 
+First, create a database file. You can use the [DB Browser for SQLite](https://sqlitebrowser.org/) to easily create the tables and insert some data, or you can also use the [sqlite3](https://www.sqlite.org/cli.html) command line shell.
 
-The `"database.db"` is the path to the database file. If the file does not exist, it will be created.
+Then, import the data provider as an async function and pass the database file path as a parameter.
+
+Finally, use the methods to create, update, delete, and get data from your database.
+
+### Full example
 
 ```ts
-import dataProvider from "refine-sqlite";
+import { dataProvider } from "refine-sqlite";
 
-<Refine
-    ...
-    dataProvider={dataProvider("database.db")}
-/>
-```
-Now you can use it in your app. Just make sure to have the table (resource) already created in the database.
-```ts
-const response = await dataProvider("database.db")
+async function getPosts() {
+  const response = await dataProvider("database.db")
     .getList({
-        resource: "posts",
-        sorters: [
-            {
-                field: "id",
-                order: "desc",
-            }
-        ],
+      resource: "posts",
+      filters: [
+        {
+          field: "category_id",
+          operator: "eq",
+          value: ["2"],
+        },
+      ],
+      sorters: [
+        {
+          field: "title",
+          order: "asc",
+        },
+      ],
     });
-
-const { data } = response;
-...
+  const { data } = response;
+  return data;
+}
 ```
 
+### Expected data from `response`
+
+```bash
+{
+  data: [
+    { id: 6, title: 'Dolorem unde et officiis.', category_id: 2 },
+    { id: 1, title: 'Soluta et est est.', category_id: 2 }
+  ],
+  total: 2
+}
+```
+
+> Using the [test.db](./test.db) database file.
+ 
 ### Available methods
 
-<table>
-<th>Method</th>
-<th>Description</th>
-<tr>
-<td><code>create()</code></td>
-<td>Create a new record</td>
-</tr>
-<tr>
-<td><code>update()</code></td>
-<td>Update an existing record</td>
-</tr>
-<tr>
-<td><code>deleteOne()</code></td>
-<td>Delete a single record</td>
-</tr>
-<tr>
-<td><code>getOne()</code></td>
-<td>Get a single record</td>
-</tr>
-<tr>
-<td><code>getList()</code></td>
-<td>Get a list of records</td>
-</tr>
-<tr>
-<td><code>getMany()</code></td>
-<td>Get a list of records by ids</td>
-</tr>
+| Method        | Description                           |
+|---------------|---------------------------------------|
+| `create()`    | Creates a new record.                 |
+| `update()`    | Updates a record.                     |
+| `deleteOne()` | Deletes a record.                     |
+| `getOne()`    | Gets a single record.                 |
+| `getList()`   | Gets a list of records.               |
+| `getMany()`   | Gets a list of records by their ids.  |
 
-</table>
-
-> **Note**
+> [!NOTE]  
 > Not all the methods have been implemented. See all [here](https://refine.dev/docs/api-reference/core/providers/data-provider/#methods).
 
+#### How to use the methods
+
+<details>
+<summary>Click to expand</summary>
+
+- `create()`
+    ```ts
+    create({ 
+      resource: "posts",
+      variables: { 
+        title: "New post", 
+        body: "New post body"
+      }
+    });
+    ```
+
+- `update()`
+    ```ts
+    update({ 
+      resource: "posts",
+      id: 1,
+      variables: {
+        title: "Updated post" 
+      } 
+    });
+    ```
+
+- `deleteOne()`
+    ```ts
+    deleteOne({ 
+      resource: "posts",
+      id: 1
+    });
+    ```
+
+- `getOne()`
+    ```ts
+    getOne({ 
+      resource: "posts",
+      id: 3
+    });
+    ```
+
+- `getList()`
+    ```ts
+    getList({ resource: "posts" });
+    ```
+
+- `getMany()`
+    ```ts
+    getMany({ 
+      resource: "posts",
+      ids: [1, 2, 3]
+    });
+    ```
+  
+</details>
+
+### Available filters
+
+| Filter        | Description              |
+|---------------|--------------------------|
+| `eq`          | Is equal to              |
+| `ne`          | Is not equal to          |
+| `gte`         | Greater than or equal to |
+| `lte`         | Less than or equal to    |
+| `contains`    | Contains                 |
+
+> [!NOTE]
+> Not all the filters have been implemented. See all [here](https://refine.dev/docs/api-reference/core/interfaceReferences/#crudfilters).
+
+#### How to use the filters
+
+<details>
+<summary>Click to expand</summary>
+
+- `eq`
+    ```ts
+    filters: [{
+      field: "id", operator: "eq", value: 1
+    }]
+    ```
+- `ne`
+    ```ts
+    filters: [{
+      field: "id", operator: "ne", value: 1
+    }]
+    ```
+- `gte`
+    ```ts
+    filters: [{
+      field: "id", operator: "gte", value: 1
+    }]
+    ```
+- `lte`
+    ```ts
+    filters: [{
+      field: "id", operator: "lte", value: 1
+    }]
+    ```
+- `contains`
+    ```ts
+    filters: [{
+      field: "title", operator: "contains", value: "Lorem"
+    }]
+    ```
+  
+</details>
+
+### Available sorters
+
+| Order  | Description              |
+|--------|--------------------------|
+| `asc`  | Ascending order          |
+| `desc` | Descending order         |
+
+#### How to use the sorters
+
+<details>
+<summary>Click to expand</summary>
+
+- `asc`
+    ```ts
+    sorters: [{
+      field: "id", order: "asc"
+    }]
+    ```
+- `desc`
+    ```ts
+    sorters: [{
+      field: "id", order: "desc"
+    }]
+    ```
+  
+</details>
 
 ## Development
 
@@ -130,7 +260,12 @@ pnpm run build
 pnpm run test
 ```
 
+> [!IMPORTANT]  
+> Before the tests run, the database file `test.db` is deleted and recreated.
+
 ## Contributing
+
+![shoutout-sponsors](https://sponsor-spotlight.vercel.app/sponsor?login=mateusabelli)
 
 All contributions are welcome and appreciated! Please create an [Issue](https://github.com/mateusabelli/refine-sqlite/issues) or [Pull Request](https://github.com/mateusabelli/refine-sqlite/pulls) if you encounter any problems or have suggestions for improvements.
 
@@ -139,6 +274,7 @@ If you want to say **thank you** or/and support active development of **refine-s
 -  Add a [GitHub Star](https://github.com/mateusabelli/refine-sqlite) to the project.
 - Tweet about the project [on Twitter / X](https://twitter.com/intent/tweet?text=With%20refine-sqlite%20you%20can%20quickly%20start%20developing%20your%20next%20refine%20project%20with%20a%20lightweight%20local%20database.%20Check%20it%20out!%0A%0A%20https%3A//github.com/mateusabelli/refine-sqlite%20).
 - Write interesting articles about the project on [Dev.to](https://dev.to/), [Medium](https://medium.com/) or personal blog.
+- Consider becoming a sponsor on [GitHub](https://github.com/sponsors/mateusabelli).
 
 ## License
 
