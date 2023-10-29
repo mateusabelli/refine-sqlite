@@ -42,9 +42,12 @@ npm install refine-sqlite
 
 First, create a database file. You can use the [DB Browser for SQLite](https://sqlitebrowser.org/) to easily create the tables and insert some data, or you can also use the [sqlite3](https://www.sqlite.org/cli.html) command line shell.
 
-Then, import the data provider as an async function and pass the database file path as a parameter.
+Then, import the data provider to use in an async function, and pass the database file path as a parameter.
 
-Finally, use the methods to create, update, delete, and get data from your database.
+Finally, use the methods to create, update, delete, and get data from your database, filtering and sorting as you wish.
+
+> **Note**
+> `resource` is the name of the table in the database.
 
 ### Full example
 
@@ -76,6 +79,8 @@ async function getPosts() {
 
 ### Expected data from `response`
 
+> Using the [test.db](./test.db) database file.
+ 
 ```bash
 {
   data: [
@@ -85,8 +90,6 @@ async function getPosts() {
   total: 2
 }
 ```
-
-> Using the [test.db](./test.db) database file.
  
 ### Available methods
 
@@ -99,13 +102,11 @@ async function getPosts() {
 | `getList()`   | Gets a list of records.               |
 | `getMany()`   | Gets a list of records by their ids.  |
 
-> [!NOTE]  
+> **Note**
 > Not all the methods have been implemented. See all [here](https://refine.dev/docs/api-reference/core/providers/data-provider/#methods).
 
-#### How to use the methods
-
 <details>
-<summary>Click to expand</summary>
+<summary><b>How to use the methods</b> (Click to expand)</summary>
 
 - `create()`
     ```ts
@@ -170,13 +171,11 @@ async function getPosts() {
 | `lte`         | Less than or equal to    |
 | `contains`    | Contains                 |
 
-> [!NOTE]
+> **Note**
 > Not all the filters have been implemented. See all [here](https://refine.dev/docs/api-reference/core/interfaceReferences/#crudfilters).
 
-#### How to use the filters
-
 <details>
-<summary>Click to expand</summary>
+<summary><b>How to use the filters</b> (Click to expand)</summary>
 
 - `eq`
     ```ts
@@ -218,10 +217,10 @@ async function getPosts() {
 | `asc`  | Ascending order          |
 | `desc` | Descending order         |
 
-#### How to use the sorters
+#### 
 
 <details>
-<summary>Click to expand</summary>
+<summary><b>How to use the sorters</b> (Click to expand)</summary>
 
 - `asc`
     ```ts
@@ -260,12 +259,10 @@ pnpm run build
 pnpm run test
 ```
 
-> [!IMPORTANT]  
+> **Important**
 > Before the tests run, the database file `test.db` is deleted and recreated.
 
 ## Contributing
-
-![shoutout-sponsors](https://sponsor-spotlight.vercel.app/sponsor?login=mateusabelli)
 
 All contributions are welcome and appreciated! Please create an [Issue](https://github.com/mateusabelli/refine-sqlite/issues) or [Pull Request](https://github.com/mateusabelli/refine-sqlite/pulls) if you encounter any problems or have suggestions for improvements.
 
@@ -275,6 +272,8 @@ If you want to say **thank you** or/and support active development of **refine-s
 - Tweet about the project [on Twitter / X](https://twitter.com/intent/tweet?text=With%20refine-sqlite%20you%20can%20quickly%20start%20developing%20your%20next%20refine%20project%20with%20a%20lightweight%20local%20database.%20Check%20it%20out!%0A%0A%20https%3A//github.com/mateusabelli/refine-sqlite%20).
 - Write interesting articles about the project on [Dev.to](https://dev.to/), [Medium](https://medium.com/) or personal blog.
 - Consider becoming a sponsor on [GitHub](https://github.com/sponsors/mateusabelli).
+
+![shoutout-sponsors](https://sponsor-spotlight.vercel.app/sponsor?login=mateusabelli)
 
 ## License
 
