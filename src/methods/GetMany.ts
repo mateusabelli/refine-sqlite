@@ -27,9 +27,6 @@ class GetMany {
             const sql = `SELECT * FROM ${resource} WHERE id IN (${idString})`;
             const data = await res(sql) as Array<any>;
 
-            const dbClose = promisify(init.db.close.bind(init.db));
-            await dbClose();
-
             if (data)
                 return { data };
             else
