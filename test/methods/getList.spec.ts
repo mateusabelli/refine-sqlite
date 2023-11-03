@@ -5,7 +5,7 @@ describe("getList", () => {
 
     it("correct response", async () => {
         const response = await dataProvider(apiUrl)
-            .getList({resource: "posts"});
+            .getList({ resource: "posts" })
 
         expect(response.data[0]["id"]).toBe(1);
         expect(response.data[0]["title"]).toBe("Soluta et est est.");

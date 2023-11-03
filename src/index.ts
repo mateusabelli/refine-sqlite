@@ -1,3 +1,2 @@
-import { dataProvider } from "./provider";
+import { dataProvider } from "./Provider";
 export default dataProvider;
-export * from "./utils";
