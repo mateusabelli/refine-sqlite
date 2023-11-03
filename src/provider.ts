@@ -1,27 +1,45 @@
-import sqlite3 from "sqlite3";
-import { DataProvider } from "./interfaces/DataProvider";
-import { GetOneParams } from "./interfaces/MethodParams";
-import Database from "./utils/Database";
-import GetOne from "./methods/GetOne";
-import { BaseRecord, GetOneResponse } from "@refinedev/core";
+import { CreateParams, DeleteOneParams, GetListParams, GetManyParams, GetOneParams, UpdateParams } from "./interfaces/MethodParams";
 
-class Provider implements DataProvider {
-    private db: sqlite3.Database | null = null;
+import GetOne from "./methods/GetOne";
+import Create from "./methods/Create";
+import DeleteOne from "./methods/DeleteOne";
+import GetMany from "./methods/GetMany";
+import Update from "./methods/Update";
+import GetList from "./methods/GetList";
+
+class Provider {
+    private dbPath: string;
 
     constructor(dbPath: string) {
-        this.db = Database.create(dbPath);
+        this.dbPath = dbPath;
     }
 
-    async getOne<TData extends BaseRecord = BaseRecord>(
-        params: GetOneParams,
-    ): Promise<GetOneResponse<TData>> {
-        if (!this.db)
-            throw new Error("Database connection not available.");
+    create(params: CreateParams) {
+        return Create.build(this.dbPath, params)
+    }
 
-        return new GetOne(this.db).build(params);
+    update(params: UpdateParams) {
+        return Update.build(this.dbPath, params)
+    }
+
+    deleteOne(params: DeleteOneParams) {
+        return DeleteOne.build(this.dbPath, params);
+    }
+
+    getOne(params: GetOneParams) {
+        return GetOne.build(this.dbPath, params);
+    }
+
+    getMany(params: GetManyParams) {
+        return GetMany.build(this.dbPath, params);
+    }
+
+    getList(params: GetListParams) {
+        return GetList.build(this.dbPath, params);
     }
 }
 
 export const dataProvider = (dbPath: string) => {
     return new Provider(dbPath);
 };
+

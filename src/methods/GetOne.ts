@@ -1,25 +1,27 @@
+import { GetOneResponse } from "@refinedev/core";
 import { GetOneParams } from "src/interfaces/MethodParams";
-import { BaseRecord, GetOneResponse } from "@refinedev/core";
-import sqlite3 from "sqlite3";
 import { promisify } from "util";
+import sqlite3 from "sqlite3";
+import Database from "../utils/Database";
 
 class GetOne {
+    private static dbInstance: Database;
     private db: sqlite3.Database | null = null;
 
-    constructor(db: sqlite3.Database) {
-        this.db = db;
+    private constructor(dbPath: string) {
+        GetOne.dbInstance = Database.getInstance(dbPath);
+        this.db = GetOne.dbInstance.getDatabase();
     }
 
-    async build<TData extends BaseRecord = BaseRecord>(
-        params: GetOneParams
-    ): Promise<GetOneResponse<TData>> {
+    static async build(dbPath: string, params: GetOneParams): Promise<GetOneResponse> {
+        const init = new GetOne(dbPath);
         const { resource, id } = params;
 
         try {
-            if (!this.db)
+            if (!init.db)
                 throw new Error("Database connection not available.");
 
-            const res = promisify(this.db.get.bind(this.db));
+            const res = promisify(init.db.get.bind(init.db));
             const sql = `SELECT * FROM ${resource} WHERE id = ${id}`;
             const data = await res(sql) as any
 
@@ -30,8 +32,10 @@ class GetOne {
         } catch (error) {
             console.error("Error in getOne()", error);
             return {
-                data: {} as TData
+                data: {}
             }
+        } finally {
+            this.dbInstance.closeDatabase();
         }
     }
 }

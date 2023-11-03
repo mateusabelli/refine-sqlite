@@ -1,53 +1,50 @@
-import { DeleteOneParams, DeleteOneResponse } from "@refinedev/core";
-import { Database } from "sqlite3";
+import { DeleteOneResponse } from "@refinedev/core";
+import { DeleteOneParams } from "src/interfaces/MethodParams";
+import { promisify } from "util";
+import sqlite3 from "sqlite3";
+import Database from "../utils/Database";
 
-// type Params = Pick<DeleteOneParams,
-//     "resource" |
-//     "id"
-// > & {
-//     db: Database
-// };
+class DeleteOne {
+    private static dbInstance: Database;
+    private db: sqlite3.Database | null = null;
 
-export async function deleteOne({ db, resource, id }: Pick<DeleteOneParams,
-    "resource" |
-    "id"
-> & {
-    db: Database
-}): Promise<DeleteOneResponse> {
-    try {
-        const data = await new Promise((resolve, reject) => {
-            let sql = `DELETE FROM ${resource} WHERE id = ${id}`;
+    private constructor(dbPath: string) {
+        DeleteOne.dbInstance = Database.getInstance(dbPath);
+        this.db = DeleteOne.dbInstance.getDatabase();
+    }
 
-            db.serialize(() => {
-                db.run(sql, (err) => {
-                    if (err) {
-                        reject(err);
-                    }
-                });
-                sql = `SELECT * FROM ${resource} WHERE id = ${id}`;
-                db.get(sql, (err, row) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(row);
-                    }
-                });
-                db.close();
-            });
-        }) as any
+    static async build(dbPath: string, params: DeleteOneParams): Promise<DeleteOneResponse<null>> {
+        const init = new DeleteOne(dbPath);
+        const { resource, id } = params;
 
-        if (data) {
-            throw new Error("The row was not deleted");
-        }
+        try {
+            if (!init.db)
+                throw new Error("Database connection not available.");
 
-        return {
-            data: data ?? {}
-        }
-    } catch (error) {
-        console.error("Error in deleteOne()", error);
-        return {
-            data: {}
+            let deleteSql = `DELETE FROM ${resource} WHERE id = ${id}`;
+            let selectSql = `SELECT * FROM ${resource} WHERE id = ${id}`;
+
+            const dbRun = promisify(init.db.run.bind(init.db));
+            await dbRun(deleteSql);
+
+            const dbGet = promisify(init.db.get.bind(init.db));
+            const data = await dbGet(selectSql) as any;
+
+            if (data)
+                throw new Error(`Could not delete data in ${resource} with id ${id}`);
+            else
+                return {
+                    data: null
+                }
+        } catch (error) {
+            console.error("Error in deleteOne()", error);
+            return {
+                data: null
+            }
+        } finally {
+            this.dbInstance.closeDatabase();
         }
     }
 }
 
+export default DeleteOne;

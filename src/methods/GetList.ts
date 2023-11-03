@@ -1,70 +1,75 @@
-import { Database } from "sqlite3";
-import { generateSort } from "src/utils/generateSort";
-import { generateFilter } from "src/utils/generateFilter";
+import { GetListParams } from "../interfaces/MethodParams";
 import { GetListResponse } from "@refinedev/core";
-import { GetListParams } from "src/interfaces/MethodParams";
+import { generateFilter } from "../utils/generateFilter";
+import { generateSort } from "../utils/generateSort";
+import { promisify } from "util";
+import sqlite3 from "sqlite3";
+import Database from "../utils/Database";
 
-export async function getList({ resource, pagination, filters, sorters }: GetListParams): Promise<GetListResponse> {
-    try {
-        const {
-            current = 1,
-            pageSize = 10,
-        } = pagination ?? {};
+class GetList {
+    private static dbInstance: Database;
+    private db: sqlite3.Database | null = null;
 
-        const queryFilters = generateFilter(filters);
+    private constructor(dbPath: string) {
+        GetList.dbInstance = Database.getInstance(dbPath);
+        this.db = GetList.dbInstance.getDatabase();
+    }
 
-        const query: {
-            _start?: number;
-            _end?: number;
-            _sortString?: string;
-        } = {};
+    static async build(dbPath: string, params: GetListParams): Promise<GetListResponse> {
+        const init = new GetList(dbPath);
+        const { resource, pagination, filters, sorters } = params;
 
-        query._start = (current - 1) * pageSize;
-        query._end = current * pageSize;
+        try {
+            if (!init.db)
+                throw new Error("Database connection not available.");
 
-        const generatedSort = generateSort(sorters);
-        if (generatedSort) {
-            query._sortString = generatedSort;
-        }
+            const {
+                current = 1,
+                pageSize = 10,
+            } = pagination ?? {};
 
-        const rows = await new Promise((resolve, reject) => {
+            const queryFilters = generateFilter(filters);
+
+            const query: {
+                _start?: number;
+                _end?: number;
+                _sortString?: string;
+            } = {};
+
+            query._start = (current - 1) * pageSize;
+            query._end = current * pageSize;
+
+            const generatedSort = generateSort(sorters);
+            if (generatedSort) query._sortString = generatedSort;
+
+            const dbAll = promisify(init.db.all.bind(init.db));
+
             let sql = `SELECT * FROM ${resource}`;
 
-            if (queryFilters) {
-                sql += ` WHERE ${queryFilters}`;
+            if (pagination) sql += ` LIMIT ${query._start}, ${query._end}`;
+            if (queryFilters) sql += ` WHERE ${queryFilters}`;
+            if (generatedSort) sql += ` ORDER BY ${query._sortString}`;
+
+            const data = await dbAll(sql) as Array<any>;
+
+            if (data)
+                return {
+                    data,
+                    total: data?.length ?? 0
+                };
+            else
+                throw new Error(`No data found in ${resource}`);
+
+        } catch (error) {
+            console.error("Error in getList()", error);
+            return {
+                data: [],
+                total: 0
             }
-
-            if (generatedSort) {
-                sql += ` ORDER BY ${query._sortString}`;
-            }
-
-            if (pagination) {
-                sql += ` LIMIT ${query._start}, ${query._end}`;
-            }
-
-            db.all(sql, (err, rows) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    resolve(rows);
-                }
-                db.close();
-            });
-        }) as Array<any>
-
-        let data = rows;
-        let total = rows?.length ?? 0;
-
-        return {
-            data,
-            total: total || data.length
-        };
-    } catch (error) {
-        console.error("Error in getList()", error);
-        return {
-            data: [],
-            total: 0
+        } finally {
+            this.dbInstance.closeDatabase();
         }
     }
 }
 
+export default GetList;
