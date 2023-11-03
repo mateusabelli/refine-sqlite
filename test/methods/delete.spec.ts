@@ -1,4 +1,4 @@
-import {} from "../../src/index";
+import dataProvider from "../../src";
 
 describe("deleteOne", () => {
     const apiUrl = "./test.db"
