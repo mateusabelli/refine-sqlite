@@ -1,47 +1,45 @@
-import sqlite3 from "sqlite3";
+import initSqlJs from "sql.js";
 import fs from "fs";
 
 beforeAll(async () => {
     const dbPath = "test.db";
+
     try {
-        // Delete the database if it exists (DB must be disconnected first)
+        // Delete the database if it exists (DB must be disconnected elsewhere)
         if (fs.existsSync(dbPath)) {
             fs.rmSync(dbPath);
         }
+
         // Create the database
-        const db = new sqlite3.Database(dbPath, (err) => {
-            if (err) {
-                console.error("Error creating the database.", err);
-            }
+        const SQL = await initSqlJs({
+            locateFile: () => "node_modules/sql.js/dist/sql-wasm.wasm"
         });
+        const db = new SQL.Database();
 
         // Read the sql file
         const sql = fs.readFileSync("./test.sql").toString();
-        const sqlArray = sql.split(";")
+        const sqlArray = sql.split(";");
 
         // Create the tables
-        await new Promise<void>((resolve, reject) => {
-            db.serialize(() => {
-                for (let i = 0; i < sqlArray.length - 1; i++) {
-                    if (sqlArray[i].trim() === "") continue;
+        for (let i = 0; i < sqlArray.length - 1; i++) {
+            if (sqlArray[i].trim() === "") continue;
 
-                    db.run(sqlArray[i], (err) => {
-                        if (err) {
-                            console.error("Error running queries: ", err);
-                            reject(err);
-                        }
-                    });
-                }
-            });
-            db.close((err) => {
-                if (err) {
-                    console.error("Error closing the database: ", err);
-                    reject(err);
-                }
-                resolve();
-            });
-        });
+            try {
+                db.run(sqlArray[i]);
+            } catch (error) {
+                console.error("Error running queries: ", error);
+            }
+        }
+
+        // Write the database
+        const data = db.export();
+        fs.writeFileSync(dbPath, new Uint8Array(data));
+
+        // Close the connection
+        db.close();
+
     } catch (error) {
         console.error("Error in beforeAll: ", error);
     }
-})
+});
+
