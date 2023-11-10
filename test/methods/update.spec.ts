@@ -1,18 +1,18 @@
 import dataProvider from "../../src";
 
 describe("update", () => {
-    const apiUrl = "./test.db"
-
     it("correct response", async () => {
-        const response = await dataProvider(apiUrl)
-            .update({
-                resource: "posts",
-                id: "1",
-                variables: {
-                    id: 1,
-                    title: "foo",
-                },
-            });
+        const response = await dataProvider(
+            "local",
+            "http://localhost:5173/test.db"
+        ).update({
+            resource: "posts",
+            id: "1",
+            variables: {
+                id: 1,
+                title: "foo",
+            },
+        });
 
         const { data } = response;
 
