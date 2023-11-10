@@ -7,6 +7,7 @@ specifiers:
   '@types/jest': ^29.5.5
   '@types/node': ^20.8.6
   '@types/sql.js': ^1.4.8
+  cross-fetch: ^4.0.0
   jest: ^29.7.0
   jest-environment-jsdom: ^29.7.0
   sql.js: ^1.8.0
@@ -19,6 +20,7 @@ specifiers:
   warn-once: ^0.1.1
 
 dependencies:
+  cross-fetch: 4.0.0
   sql.js: 1.8.0
   sqlite3: 5.1.6
 
@@ -3448,6 +3450,14 @@ packages:
     transitivePeerDependencies:
       - encoding
     dev: true
+
+  /cross-fetch/4.0.0:
+    resolution: {integrity: sha512-e4a5N8lVvuLgAWgnCrLr2PP0YyDOTHa9H/Rj54dirp61qXnNq46m82bRhNqIA5VccJtWBvPTFRV3TtvHUKPB1g==}
+    dependencies:
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
+    dev: false
 
   /cross-spawn/7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
