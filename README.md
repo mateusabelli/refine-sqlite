@@ -273,7 +273,20 @@ If you want to say **thank you** or/and support active development of **refine-s
 - Write interesting articles about the project on [Dev.to](https://dev.to/), [Medium](https://medium.com/) or personal blog.
 - Consider becoming a sponsor on [GitHub](https://github.com/sponsors/mateusabelli).
 
-![shoutout-sponsors](https://sponsor-spotlight.vercel.app/sponsor?login=mateusabelli)
+
+## Special Thanks
+
+<table>
+  <td>
+    <a href="https://github.com/refinedev">
+      <img src="https://github.com/refinedev.png" width=64 height=64>
+      <p align="center">refine</p>
+    </a>
+  </td>
+</table>
+
+I'd like to thank [refine](https://github.com/refinedev), my first GitHub sponsor :heart: <br>
+For believing and supporting my projects!
 
 ## License
 
