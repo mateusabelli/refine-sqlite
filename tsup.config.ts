@@ -6,7 +6,7 @@ export default defineConfig({
     splitting: false,
     sourcemap: true,
     clean: false,
-    platform: "browser",
+    platform: "node",
     esbuildPlugins: [
         NodeResolvePlugin({
             extensions: [".js", "ts", "tsx", "jsx"],
