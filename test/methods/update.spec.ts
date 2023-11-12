@@ -3,7 +3,7 @@ import dataProvider from "../../src";
 describe("update", () => {
     it("correct response", async () => {
         const response = await dataProvider(
-            "local",
+            "inMemory",
             "http://localhost:5173/test.db"
         ).update({
             resource: "posts",
