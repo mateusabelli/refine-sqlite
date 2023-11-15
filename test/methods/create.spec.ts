@@ -1,10 +1,10 @@
 import dataProvider from "../../src";
 
 describe("create", () => {
-    const apiUrl = "http://localhost:5173/test.db";
+    const apiUrl = "./test.db";
 
     it("correct response", async () => {
-        const response = await dataProvider(apiUrl, "inMemory")
+        const response = await dataProvider(apiUrl)
             .create({
                 resource: "posts",
                 variables: { id: 1001, title: "foo", category_id: 1 },
