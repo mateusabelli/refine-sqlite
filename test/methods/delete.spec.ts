@@ -9,6 +9,6 @@ describe("deleteOne", () => {
 
         const { data } = response;
 
-        expect(data).toEqual(null);
+        expect(data).toEqual({});
     });
 });
