@@ -6,7 +6,7 @@ class Database {
 
     private constructor() { }
 
-    public static async init(databaseType: "local" | "inMemory", databasePath: string): Promise<initSqlJs.Database> {
+    public static async init(databasePath: string, databaseType?: undefined | "inMemory"): Promise<initSqlJs.Database> {
         this.SQL = await initSqlJs({
             locateFile: () => "node_modules/sql.js/dist/sql-wasm.wasm"
         });
