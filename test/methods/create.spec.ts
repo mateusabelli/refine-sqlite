@@ -1,10 +1,10 @@
-import dataProvider from "../../src";
+import {dataProvider} from "../../src";
 
 describe("create", () => {
     const apiUrl = "./test/test.db"
 
-    it("correct response", async () => {
-        const response = await dataProvider(
+    it("correct response", () => {
+        const response = dataProvider(
             apiUrl
         ).create({
             resource: "posts",

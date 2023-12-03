@@ -1,4 +1,4 @@
-import sqlite3 from "sqlite3";
+import Database from 'better-sqlite3';
 import fs from "fs";
 
 beforeAll(async () => {
@@ -8,40 +8,16 @@ beforeAll(async () => {
         if (fs.existsSync(dbPath)) {
             fs.rmSync(dbPath);
         }
-        // Create the database
-        const db = new sqlite3.Database(dbPath, (err) => {
-            if (err) {
-                console.error("Error creating the database.", err);
-            }
-        });
 
-        // Read the sql file
-        const sql = fs.readFileSync("./test/test.sql").toString();
-        const sqlArray = sql.split(";")
+        // Create the database
+        const db = new Database(dbPath)
+        db.pragma('journal_mode = WAL');
 
         // Create the tables
-        await new Promise<void>((resolve, reject) => {
-            db.serialize(() => {
-                for (let i = 0; i < sqlArray.length - 1; i++) {
-                    if (sqlArray[i].trim() === "") continue;
-
-                    db.run(sqlArray[i], (err) => {
-                        if (err) {
-                            console.error("Error running queries: ", err);
-                            reject(err);
-                        }
-                    });
-                }
-            });
-            db.close((err) => {
-                if (err) {
-                    console.error("Error closing the database: ", err);
-                    reject(err);
-                }
-                resolve();
-            });
-        });
+        const migration = fs.readFileSync('test/test.sql', 'utf8');
+        db.exec(migration);
+        db.close()
     } catch (error) {
-        console.error("Error in beforeAll: ", error);
+        console.error("[JEST] Error in beforeAll: ", error);
     }
 })
