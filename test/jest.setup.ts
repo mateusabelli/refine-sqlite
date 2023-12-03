@@ -2,7 +2,7 @@ import sqlite3 from "sqlite3";
 import fs from "fs";
 
 beforeAll(async () => {
-    const dbPath = "test.db";
+    const dbPath = "test/test.db";
     try {
         // Delete the database if it exists (DB must be disconnected first)
         if (fs.existsSync(dbPath)) {
@@ -16,7 +16,7 @@ beforeAll(async () => {
         });
 
         // Read the sql file
-        const sql = fs.readFileSync("./test.sql").toString();
+        const sql = fs.readFileSync("./test/test.sql").toString();
         const sqlArray = sql.split(";")
 
         // Create the tables
