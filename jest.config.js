@@ -3,5 +3,5 @@ module.exports = {
     rootDir: "./",
     displayName: "refine-sqlite",
     setupFilesAfterEnv: ["<rootDir>/test/jest.setup.ts"],
-    testEnvironment: "jsdom",
+    testEnvironment: "node",
 };
