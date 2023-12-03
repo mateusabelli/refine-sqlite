@@ -27,7 +27,7 @@
     }
   ],
   "engines": {
-    "node": ">=10"
+    "node": ">=16"
   },
   "module": "dist/esm/index.js",
   "scripts": {
@@ -41,18 +41,13 @@
   },
   "devDependencies": {
     "@esbuild-plugins/node-resolve": "^0.2.2",
-    "@refinedev/cli": "^2.16.6",
-    "@refinedev/core": "^4.44.5",
-    "@types/jest": "^29.5.5",
-    "@types/node": "^20.8.6",
-    "@types/sql.js": "^1.4.8",
+    "@refinedev/core": "^4.45.1",
+    "@types/jest": "^29.5.10",
+    "@types/node": "^20.10.2",
     "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
     "ts-jest": "^29.1.1",
     "tslib": "^2.6.2",
-    "tsup": "^7.2.0",
-    "typescript": "^5.2.2",
-    "util": "^0.12.5",
-    "warn-once": "^0.1.1"
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.2"
   }
 }
