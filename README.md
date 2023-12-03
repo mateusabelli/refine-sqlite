@@ -79,7 +79,7 @@ async function getPosts() {
 
 ### Expected data from `response`
 
-> Using the [test.db](./test.db) database file.
+> Using the [test.db](test/test.db) database file.
  
 ```bash
 {
