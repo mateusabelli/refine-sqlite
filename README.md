@@ -28,9 +28,10 @@ With **refine-sqlite** you can quickly start creating your app as fast as possib
 
 ## Features
 
-- **Easy to use** - Just import the data provider and use it in your code.
-- **Lightweight** - The SQLite database is lightweight and can be used locally.
-- **Simple** - You won't need to type SQL queries, just use the data provider methods. Except for the tables creation, which you can easily do with the [DB Browser for SQLite](https://sqlitebrowser.org/).
+- **Well tested** - All the methods are tested using [Jest](https://jestjs.io/).
+- **Fully featured** - All CRUD operations are supported.
+- **Synchronous** - Everything works synchronously using [better-sqlite3](https://www.npmjs.com/package/better-sqlite3).
+- **Type safe** - Written in TypeScript with strict mode enabled.
 
 ## Installation
 
@@ -40,203 +41,51 @@ npm install refine-sqlite
 
 ## Usage
 
-First, create a database file. You can use the [DB Browser for SQLite](https://sqlitebrowser.org/) to easily create the tables and insert some data, or you can also use the [sqlite3](https://www.sqlite.org/cli.html) command line shell.
-
-Then, import the data provider to use in an async function, and pass the database file path as a parameter.
-
-Finally, use the methods to create, update, delete, and get data from your database, filtering and sorting as you wish.
+1. Create a database file. You can use the [DB Browser for SQLite](https://sqlitebrowser.org/) to easily create the tables and insert some data, or you can also use the [sqlite3](https://www.sqlite.org/cli.html) command line shell. <br>
+2. Import the `dataProvider` function in your file and pass the database file path as a string parameter. <br>
+3. Use the methods to create, update, delete, and get data from your database, filtering and sorting as you wish.
 
 > **Note**
 > `resource` is the name of the table in the database.
 
-### Full example
-
 ```ts
 import { dataProvider } from "refine-sqlite";
 
-async function getPosts() {
-  const response = await dataProvider("database.db")
-    .getList({
-      resource: "posts",
-      filters: [
-        {
-          field: "category_id",
-          operator: "eq",
-          value: ["2"],
-        },
-      ],
-      sorters: [
-        {
-          field: "title",
-          order: "asc",
-        },
-      ],
-    });
-  const { data } = response;
-  return data;
-}
+const response = dataProvider("database.db")
+  .getList({
+    resource: "posts",
+    filters: [
+      {
+        field: "category_id",
+        operator: "eq",
+        value: ["2"],
+      },
+    ],
+    sorters: [
+      {
+        field: "title",
+        order: "asc",
+      },
+    ],
+  });
+
+console.log(response)
+
+// {
+//   data: [
+//     { id: 6, title: 'Dolorem unde et officiis.', category_id: 2 },
+//     { id: 1, title: 'Soluta et est est.', category_id: 2 }
+//   ],
+//   total: 2
+// }
 ```
 
-### Expected data from `response`
+## Documentation
 
-> Using the [test.db](test/test.db) database file.
+- [Methods](https://github.com/mateusabelli/refine-sqlite/wiki/Methods)
+- [Filters](https://github.com/mateusabelli/refine-sqlite/wiki/Filters)
+- [Sorters](https://github.com/mateusabelli/refine-sqlite/wiki/Sorters)
  
-```bash
-{
-  data: [
-    { id: 6, title: 'Dolorem unde et officiis.', category_id: 2 },
-    { id: 1, title: 'Soluta et est est.', category_id: 2 }
-  ],
-  total: 2
-}
-```
- 
-### Available methods
-
-| Method        | Description                           |
-|---------------|---------------------------------------|
-| `create()`    | Creates a new record.                 |
-| `update()`    | Updates a record.                     |
-| `deleteOne()` | Deletes a record.                     |
-| `getOne()`    | Gets a single record.                 |
-| `getList()`   | Gets a list of records.               |
-| `getMany()`   | Gets a list of records by their ids.  |
-
-> **Note**
-> Not all the methods have been implemented. See all [here](https://refine.dev/docs/api-reference/core/providers/data-provider/#methods).
-
-<details>
-<summary><b>How to use the methods</b> (Click to expand)</summary>
-
-- `create()`
-    ```ts
-    create({ 
-      resource: "posts",
-      variables: { 
-        title: "New post", 
-        body: "New post body"
-      }
-    });
-    ```
-
-- `update()`
-    ```ts
-    update({ 
-      resource: "posts",
-      id: 1,
-      variables: {
-        title: "Updated post" 
-      } 
-    });
-    ```
-
-- `deleteOne()`
-    ```ts
-    deleteOne({ 
-      resource: "posts",
-      id: 1
-    });
-    ```
-
-- `getOne()`
-    ```ts
-    getOne({ 
-      resource: "posts",
-      id: 3
-    });
-    ```
-
-- `getList()`
-    ```ts
-    getList({ resource: "posts" });
-    ```
-
-- `getMany()`
-    ```ts
-    getMany({ 
-      resource: "posts",
-      ids: [1, 2, 3]
-    });
-    ```
-  
-</details>
-
-### Available filters
-
-| Filter        | Description              |
-|---------------|--------------------------|
-| `eq`          | Is equal to              |
-| `ne`          | Is not equal to          |
-| `gte`         | Greater than or equal to |
-| `lte`         | Less than or equal to    |
-| `contains`    | Contains                 |
-
-> **Note**
-> Not all the filters have been implemented. See all [here](https://refine.dev/docs/api-reference/core/interfaceReferences/#crudfilters).
-
-<details>
-<summary><b>How to use the filters</b> (Click to expand)</summary>
-
-- `eq`
-    ```ts
-    filters: [{
-      field: "id", operator: "eq", value: 1
-    }]
-    ```
-- `ne`
-    ```ts
-    filters: [{
-      field: "id", operator: "ne", value: 1
-    }]
-    ```
-- `gte`
-    ```ts
-    filters: [{
-      field: "id", operator: "gte", value: 1
-    }]
-    ```
-- `lte`
-    ```ts
-    filters: [{
-      field: "id", operator: "lte", value: 1
-    }]
-    ```
-- `contains`
-    ```ts
-    filters: [{
-      field: "title", operator: "contains", value: "Lorem"
-    }]
-    ```
-  
-</details>
-
-### Available sorters
-
-| Order  | Description              |
-|--------|--------------------------|
-| `asc`  | Ascending order          |
-| `desc` | Descending order         |
-
-#### 
-
-<details>
-<summary><b>How to use the sorters</b> (Click to expand)</summary>
-
-- `asc`
-    ```ts
-    sorters: [{
-      field: "id", order: "asc"
-    }]
-    ```
-- `desc`
-    ```ts
-    sorters: [{
-      field: "id", order: "desc"
-    }]
-    ```
-  
-</details>
-
 ## Development
 
 Clone the repository
