@@ -1,10 +1,10 @@
-import dataProvider from "../../src";
+import {dataProvider} from "../../src";
 
 describe("getList", () => {
     const apiUrl = "./test/test.db"
 
-    it("correct response", async () => {
-        const response = await dataProvider(apiUrl)
+    it("correct response", () => {
+        const response = dataProvider(apiUrl)
             .getList({ resource: "posts" })
 
         expect(response.data[0]["id"]).toBe(1);
@@ -12,8 +12,8 @@ describe("getList", () => {
         expect(response.total).toBe(6);
     })
 
-    it("correct response with pagination", async () => {
-        const response = await dataProvider(apiUrl)
+    it("correct response with pagination", () => {
+        const response = dataProvider(apiUrl)
             .getList({
                 resource: "posts",
                 pagination: {
@@ -27,8 +27,8 @@ describe("getList", () => {
         expect(response.total).toBe(2);
     })
 
-    it("correct sorting response", async () => {
-        const response = await dataProvider(apiUrl)
+    it("correct sorting response", () => {
+        const response = dataProvider(apiUrl)
             .getList({
                 resource: "posts",
                 sorters: [
@@ -44,8 +44,8 @@ describe("getList", () => {
         expect(response.total).toBe(6);
     });
 
-    it("correct filter response", async () => {
-        const response = await dataProvider(apiUrl)
+    it("correct filter response", () => {
+        const response = dataProvider(apiUrl)
             .getList({
                 resource: "posts",
                 filters: [
@@ -61,8 +61,8 @@ describe("getList", () => {
         expect(response.total).toBe(2);
     });
 
-    it("correct filter and sort response", async () => {
-        const response = await dataProvider(apiUrl)
+    it("correct filter and sort response", () => {
+        const response = dataProvider(apiUrl)
             .getList({
                 resource: "posts",
                 filters: [

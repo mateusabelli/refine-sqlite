@@ -1,87 +1,62 @@
-import { DataProvider } from "@refinedev/core";
+import {
+    BaseRecord,
+    CreateParams,
+    DeleteOneParams,
+    GetListParams,
+    GetManyParams,
+    GetOneParams,
+    UpdateParams
+} from "@refinedev/core";
 import { generateSort, generateFilter } from "./utils";
-import sqlite3 from "sqlite3";
+import Database from "better-sqlite3";
 
-type MethodTypes = "get" | "delete" | "head" | "options";
-type MethodTypesWithBody = "post" | "put" | "patch";
+const dbConnect = (dbPath: string) => {
+    const db = new Database(dbPath)
+    db.pragma('journal_mode = WAL');
+
+    return db;
+}
 
 export const dataProvider = (
-    apiUrl: string
-): Omit<
-    Required<DataProvider>,
-    "createMany" |
-    "updateMany" |
-    "deleteMany" |
-    "custom"
-> => ({
-    getList: async ({ resource, pagination, filters, sorters, meta }) => {
+    dbPath: string
+) => ({
+    getList: ({ resource, pagination, filters, sorters }: GetListParams) => {
+        const db = dbConnect(dbPath);
+
+        const {
+            current = 1,
+            pageSize = 10,
+        } = pagination ?? {};
+
+        const queryFilters = generateFilter(filters);
+
+        const query: {
+            _start?: number;
+            _end?: number;
+            _sortString?: string;
+        } = {};
+
+        query._start = (current - 1) * pageSize;
+        query._end = current * pageSize;
+
+        const generatedSort = generateSort(sorters);
+        if (generatedSort) {
+            query._sortString = generatedSort;
+        }
+
+        let sql = `SELECT * FROM ${resource}`;
+
+        if (queryFilters) sql += ` WHERE ${queryFilters}`;
+        if (generatedSort) sql += ` ORDER BY ${query._sortString}`;
+        if (pagination) sql += ` LIMIT ${query._start}, ${query._end}`;
+
         try {
-            const db = new sqlite3.Database(apiUrl);
-
-            const {
-                current = 1,
-                pageSize = 10,
-            } = pagination ?? {};
-
-            // const { headers: headersFromMeta, method } = meta ?? {};
-            // const requestMethod = (method as MethodTypes) ?? "get";
-
-            const queryFilters = generateFilter(filters);
-
-            const query: {
-                _start?: number;
-                _end?: number;
-                _sortString?: string;
-            } = {};
-
-            query._start = (current - 1) * pageSize;
-            query._end = current * pageSize;
-
-            const generatedSort = generateSort(sorters);
-            if (generatedSort) {
-                query._sortString = generatedSort;
-            }
-
-            // const { data, headers } = await httpClient[requestMethod](
-            //     `${url}?${stringify(query)}&${stringify(queryFilters)}`,
-            //     {
-            //         headers: headersF1romMeta,
-            //     },
-            // );
-            //
-            // const total = +headers["x-total-count"];
-
-            const rows = await new Promise((resolve, reject) => {
-                let sql = `SELECT * FROM ${resource}`;
-
-                if (queryFilters) {
-                    sql += ` WHERE ${queryFilters}`;
-                }
-
-                if (generatedSort) {
-                    sql += ` ORDER BY ${query._sortString}`;
-                }
-
-                if (pagination) {
-                    sql += ` LIMIT ${query._start}, ${query._end}`;
-                }
-
-                db.all(sql, (err, rows) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(rows);
-                    }
-                    db.close();
-                });
-            }) as Array<any>
-
-            let data = rows;
-            let total = rows?.length ?? 0;
+            const stmt = db.prepare(sql)
+            const data = stmt.all() as Array<BaseRecord>;
 
             return {
                 data,
-                total: total || data.length,
+                total: data.length,
             };
         } catch (error) {
             console.error("Error in getList()", error);
@@ -89,83 +64,44 @@ export const dataProvider = (
                 data: [],
                 total: 0,
             }
+        } finally {
+            db.close();
         }
     },
 
-    getMany: async ({ resource, ids, meta }) => {
+    getMany: ({ resource, ids }: GetManyParams) => {
+        const db = dbConnect(dbPath);
+        const idString = ids.join(", ")
+
         try {
-            const db = new sqlite3.Database(apiUrl);
-
-            const data = await new Promise((resolve, reject) => {
-                let idString = ids.join(", ")
-
-                const sql = `SELECT * FROM ${resource} WHERE id IN (${idString})`;
-
-                db.all(sql, (err, rows) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(rows);
-                    }
-                    db.close();
-                });
-            }) as Array<any>
-
-            // const { headers, method } = meta ?? {};
-            // const requestMethod = (method as MethodTypes) ?? "get";
-            //
-            // const { data } = await httpClient[requestMethod](
-            //     `${apiUrl}/${resource}?${stringify({ id: ids })}`,
-            //     { headers },
-            // );
+            const stmt = db.prepare(`SELECT * FROM ${resource} WHERE id IN (${idString})`)
+            const data = stmt.all() as Array<BaseRecord>;
 
             return {
                 data,
             };
-
         } catch (error) {
             console.error("Error in getMany()", error);
             return {
                 data: [],
             }
+        } finally {
+            db.close()
         }
     },
 
-    create: async ({ resource, variables, meta }) => {
+    create: ({ resource, variables }: CreateParams) => {
+        const db = dbConnect(dbPath);
+
+        const columns = Object.keys(variables || {}).join(", ")
+        const values = Object.values(variables || {}).map((value) => `'${value}'`).join(", ")
+
         try {
-            const db = new sqlite3.Database(apiUrl);
+            const stmt = db.prepare(`INSERT INTO ${resource} (${columns}) VALUES (${values})`)
+            const { lastInsertRowid } = stmt.run()
 
-            const data = await new Promise((resolve, reject) => {
-                const columns = Object.keys(variables || {}).join(", ")
-                const values = Object.values(variables || {}).map((value) => `'${value}'`).join(", ")
-
-                let sql = `INSERT INTO ${resource} (${columns}) VALUES (${values})`
-                // Sample output of sql: INSERT INTO posts (id, title) VALUES ('1001', 'foo')
-
-                db.serialize(() => {
-                    db.run(sql, (err) => {
-                        if (err) {
-                            reject(err)
-                        }
-                    });
-                    sql = `SELECT * FROM ${resource} WHERE (${columns}) = (${values})`;
-                    db.get(sql, (err, row) => {
-                        if (err) {
-                            reject(err)
-                        } else {
-                            resolve(row);
-                        }
-                    });
-                    db.close();
-                });
-            }) as any;
-
-            // const { headers, method } = meta ?? {};
-            // const requestMethod = (method as MethodTypesWithBody) ?? "post";
-            //
-            // const { data } = await httpClient[requestMethod](url, variables, {
-            //     headers,
-            // });
+            const stmt2 = db.prepare(`SELECT * FROM ${resource} WHERE id = ${lastInsertRowid}`)
+            const data = stmt2.get() as BaseRecord;
 
             return {
                 data,
@@ -173,53 +109,33 @@ export const dataProvider = (
         } catch (error) {
             console.error("Error in create()", error);
             return {
-                data: null
+                data: {}
             }
+        } finally {
+            db.close()
         }
     },
 
-    update: async ({ resource, id, variables, meta }) => {
+    update: ({ resource, id, variables }: UpdateParams) => {
+        const db = dbConnect(dbPath);
         let updateQuery = "";
+
+        const columns = Object.keys(variables || {})
+        const values = Object.values(variables || {});
+
+        columns.forEach((column, index) => {
+            updateQuery += `${column} = '${values[index]}', `;
+        });
+
+        // Slices the last comma
+        updateQuery = updateQuery.slice(0, -2);
+
         try {
-            const db = new sqlite3.Database(apiUrl);
+            db.prepare(`UPDATE ${resource} SET ${updateQuery} WHERE id = ?`)
+                .run(id)
 
-            const data = await new Promise((resolve, reject) => {
-                const columns = Object.keys(variables || {})
-                const values = Object.values(variables || {});
-
-                columns.forEach((column, index) => {
-                    updateQuery += `${column} = '${values[index]}', `;
-                });
-
-                // Slices the last comma
-                updateQuery = updateQuery.slice(0, -2);
-
-                let sql = `UPDATE ${resource} SET ${updateQuery} WHERE id = ${id}`;
-
-                db.serialize(() => {
-                    db.run(sql, (err) => {
-                        if (err) {
-                            reject(err)
-                        }
-                    });
-                    sql = `SELECT * FROM ${resource} WHERE id = ${id}`;
-                    db.get(sql, (err, row) => {
-                        if (err) {
-                            reject(err)
-                        } else {
-                            resolve(row);
-                        }
-                    });
-                    db.close();
-                });
-            }) as any;
-
-            // const { headers, method } = meta ?? {};
-            // const requestMethod = (method as MethodTypesWithBody) ?? "patch";
-            //
-            // const { data } = await httpClient[requestMethod](url, variables, {
-            //     headers,
-            // });
+            const stmt = db.prepare(`SELECT * FROM ${resource} WHERE id = ?`)
+            const data = stmt.get(id) as BaseRecord;
 
             return {
                 data,
@@ -227,32 +143,18 @@ export const dataProvider = (
         } catch (error) {
             console.error("Error in update()", error);
             return {
-                data: null
+                data: {}
             }
+        } finally {
+            db.close()
         }
     },
 
-    getOne: async ({ resource, id, meta }) => {
+    getOne: ({ resource, id }: GetOneParams) => {
+        const db = dbConnect(dbPath);
         try {
-            const db = new sqlite3.Database(apiUrl);
-
-            const data = await new Promise((resolve, reject) => {
-                const sql = `SELECT * FROM ${resource} WHERE id = ${id}`;
-
-                db.get(sql, (err, row) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(row);
-                    }
-                    db.close();
-                });
-            }) as any
-
-            // const { headers, method } = meta ?? {};
-            // const requestMethod = (method as MethodTypes) ?? "get";
-
-            // const { data } = await httpClient[requestMethod](url, { headers });
+            const stmt = db.prepare(`SELECT * FROM ${resource} WHERE id = ?`)
+            const data = stmt.get(id) as BaseRecord;
 
             return {
                 data,
@@ -260,61 +162,34 @@ export const dataProvider = (
         } catch (error) {
             console.error("Error in getOne()", error);
             return {
+                data: {}
+            }
+        } finally {
+            db.close()
+        }
+    },
+
+    deleteOne: ({ resource, id }: DeleteOneParams) => {
+        const db = dbConnect(dbPath);
+
+        try {
+            const stmt = db.prepare(`DELETE FROM ${resource} WHERE id = ?`);
+            const { changes } = stmt.run(id);
+
+            if (changes !== 1) {
+                throw new Error(`Failed to delete ${resource} with id ${id}`);
+            }
+
+            return {
                 data: null
             }
-        }
-    },
-
-    deleteOne: async ({resource, id, variables, meta}) => {
-        try {
-            const db = new sqlite3.Database(apiUrl);
-
-            const data = await new Promise((resolve, reject) => {
-                let sql = `DELETE FROM ${resource} WHERE id = ${id}`;
-
-                db.serialize(() => {
-                    db.run(sql, (err) => {
-                        if (err) {
-                            reject(err)
-                        }
-                    });
-                    sql = `SELECT * FROM ${resource} WHERE id = ${id}`;
-                    db.get(sql, (err, row) => {
-                        if (err) {
-                            reject(err)
-                        } else {
-                            resolve(row);
-                        }
-                    });
-                    db.close();
-                });
-            }) as any
-
-            // const { headers, method } = meta ?? {};
-            // const requestMethod = (method as MethodTypesWithBody) ?? "delete";
-            //
-            // const { data } = await httpClient[requestMethod](url, {
-            //     data: variables,
-            //     headers,
-            // });
-
-            if (data) {
-                throw new Error("The row was not deleted");
-            }
-
-            return {
-                data: data ?? null,
-            }
         } catch (error) {
-            console.error("Error in deleteOne()", error);
+            console.log("Error in deleteOne()", error);
             return {
-                data: undefined
+                data: null
             }
+        } finally {
+            db.close();
         }
-
-    },
-
-    getApiUrl: () => {
-        return apiUrl;
     }
 });
