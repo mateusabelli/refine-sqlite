@@ -30,6 +30,8 @@ describe("mapOperator", () => {
             or: "",
             startswith: "",
             startswiths: "",
+            ina: "",
+            nina: ""
         };
 
         for (const operator in operatorMappings) {
